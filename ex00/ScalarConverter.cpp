@@ -5,6 +5,7 @@
 #include <cctype>
 #include <sstream>
 #include <cmath>
+#include <iomanip>  // 出力フォーマット調整のため
 
 void ScalarConverter::convert(const std::string& literal)
 {
@@ -98,7 +99,7 @@ bool ScalarConverter::isIntLiteral(const std::string& literal)
 bool ScalarConverter::isFloatLiteral(const std::string& literal)
 {
     if (literal == "-inff" || literal == "+inff" || literal == "nanf") return true;
-    if (literal.empty() || literal.back() != 'f') return false;
+    if (literal.empty() || literal[literal.size() - 1] != 'f') return false; // literal.back()を使わない形
     size_t i = (literal[0] == '-' || literal[0] == '+' ? 1 : 0);
     bool hasDot = false;
     for (; i < literal.size() - 1; ++i)
@@ -133,25 +134,29 @@ bool ScalarConverter::isDoubleLiteral(const std::string& literal)
 
 void ScalarConverter::printResults(char c, int i, float f, double d, bool validChar, bool validInt)
 {
+    bool isNanOrInf = std::isnan(d) || std::isinf(d) || std::isinf(f) || std::isnan(f);
+
     std::cout << "char: ";
-    if (validChar && std::isprint(c))
-        std::cout << "'" << c << "'" << std::endl;
-    else if (validChar)
-        std::cout << "Non displayable" << std::endl;
-    else
+    if (isNanOrInf || !validChar)
         std::cout << "impossible" << std::endl;
+    else if (std::isprint(c))
+        std::cout << "'" << c << "'" << std::endl;
+    else
+        std::cout << "Non displayable" << std::endl;
 
     std::cout << "int: ";
-    if (validInt)
-        std::cout << i << std::endl;
-    else
+    if (isNanOrInf || !validInt)
         std::cout << "impossible" << std::endl;
+    else
+        std::cout << i << std::endl;
 
+    // 小数点以下2桁までの精度で出力
+    std::cout << std::fixed << std::setprecision(1);
     std::cout << "float: " << f;
-    if (std::isfinite(f))
+    if (std::isnan(f) || std::isinf(f))
         std::cout << "f" << std::endl;
     else
-        std::cout << std::endl;
+        std::cout << "f" << std::endl;
 
     std::cout << "double: " << d << std::endl;
 }
